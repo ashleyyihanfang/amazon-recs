@@ -1,0 +1,133 @@
+---
+title: "Amazon Hackathon EDA"
+author: "Ashley Fang"
+date: '2022-09-17'
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    highlight: "tango"
+---
+
+**Loading Packages:**
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(RColorBrewer)
+library(kableExtra)
+```
+
+```{r}
+amazon <- read.csv("data/hackathon_data.csv") %>% 
+  clean_names() %>% 
+  select(c(item_id, brand, color, item_name, product_type, item_keywords, marketplace, product_category)) %>% 
+  mutate(
+    item_id = as_factor(item_id),
+    brand = as_factor(brand),
+    color = as_factor(color),
+    item_name = as_factor(item_name),
+    product_type = as_factor(product_type),
+    item_keywords = as_factor(item_keywords),
+    marketplace = as_factor(marketplace),
+    product_category = as_factor(product_category)
+  ) %>% 
+  write_csv("data/hackathon_reduced.csv")
+```
+
+**EDA**
+
+```{r}
+skimr::skim(amazon)
+```
+
+```{r}
+amazon %>% 
+  ggplot() +
+  geom_bar(aes(x = product_category)) +
+  theme(axis.text.x = element_text(angle = 50, size = 6))
+```
+
+
+```{r}
+amazon %>% 
+  ggplot() +
+  geom_bar(aes(x = marketplace)) +
+  theme(axis.text.x = element_text(size = 10))
+```
+
+
+```{r}
+amazon2 <- read.csv("data/amazon2.csv")
+amazon2 <- amazon2 %>% 
+  mutate(item_id = str_sub(amazon2$Product.Url, start = -10)) %>% 
+  select(c())
+```
+
+
+```{r}
+amazon_new <- amazon %>% 
+  inner_join(amazon2) %>% 
+  distinct(item_id, .keep_all = TRUE)
+```
+
+
+```{r}
+amazon %>% 
+  ggplot() +
+  geom_bar(aes(x = product_category)) +
+  theme(axis.text.x = element_text(angle = 50, size = 3))
+```
+
+
+```{r}
+amazon_brand <- amazon %>% 
+  group_by(brand) %>% 
+  summarize(count = n())
+
+amazon_brand %>% 
+  select(brand, count) %>% 
+  arrange(desc(count)) %>% 
+  head(n = 10) %>% 
+  kbl(caption = "Most Common Brand") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F) %>%
+  column_spec(1, bold = T) %>% 
+  row_spec(1:1, color = "black", background = "#f36537")
+```
+
+
+```{r}
+amazon_brand <- amazon %>% 
+  group_by(brand) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% print()
+  
+
+amazon_type %>% 
+  head(n = 10) %>% 
+  kbl(caption = "Most Common Product Types") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F) %>%
+  column_spec(1, bold = T) %>% 
+  row_spec(1:1, color = "black", background = "#f36537")
+```
+
+
+```{r}
+amazon_category <- amazon %>% 
+  group_by(product_category) %>% 
+  summarize(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  print()
+
+
+
+amazon_type %>% 
+  select(product_type, count) %>% 
+  arrange(desc(count)) %>% 
+  head(n = 10) %>% 
+  kbl(caption = "Most Common Product Types") %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = F) %>%
+  column_spec(1, bold = T) %>% 
+  row_spec(1:10, color = "#FEBD69", background = "#37475A")
+```
+
